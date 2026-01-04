@@ -1,0 +1,32 @@
+check_and_remind:
+  name: Check and Remind
+  description: Manually trigger a check for reminders and get AI analysis of current tasks and calendar.
+  fields: {}
+
+chat:
+  name: Chat
+  description: Send a message to the AI assistant and get a response.
+  fields:
+    message:
+      name: Message
+      description: The message to send to the AI assistant.
+      required: true
+      selector:
+        text:
+          multiline: true
+
+analyze_schedule:
+  name: Analyze Schedule
+  description: Get AI analysis of upcoming schedule including conflicts, gaps, and workload assessment.
+  fields: {}
+
+suggest_task_time:
+  name: Suggest Task Time
+  description: Ask the AI assistant to suggest optimal time for a specific task based on current schedule.
+  fields:
+    task:
+      name: Task
+      description: Description of the task to schedule.
+      required: true
+      selector:
+        text:

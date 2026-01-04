@@ -1,0 +1,57 @@
+# Example configuration.yaml snippet for HA AI Assistant
+# Note: The integration uses config flow (UI configuration), so this is just for reference
+# The actual configuration is done through the Home Assistant UI
+
+# No YAML configuration is required!
+# Configure the integration through:
+# Settings -> Devices & Services -> Add Integration -> HA AI Assistant
+
+# However, you may want to create input helpers for manual interactions:
+
+input_text:
+  ai_assistant_chat_input:
+    name: "AI Assistant Chat Input"
+    max: 500
+    icon: mdi:message-text
+
+input_text:
+  ai_assistant_task_input:
+    name: "New Task to Schedule"
+    max: 200
+    icon: mdi:calendar-plus
+
+# Example script to use the chat service
+script:
+  ask_ai_assistant:
+    alias: "Ask AI Assistant"
+    sequence:
+      - service: ha_ai_assistant.chat
+        data:
+          message: "{{ states('input_text.ai_assistant_chat_input') }}"
+        response_variable: ai_response
+      - service: notify.notify
+        data:
+          title: "AI Assistant"
+          message: "{{ ai_response.response }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ai_assistant_chat_input
+        data:
+          value: ""
+
+  schedule_new_task:
+    alias: "Schedule New Task"
+    sequence:
+      - service: ha_ai_assistant.suggest_task_time
+        data:
+          task: "{{ states('input_text.ai_assistant_task_input') }}"
+        response_variable: time_suggestion
+      - service: notify.notify
+        data:
+          title: "Task Scheduling"
+          message: "{{ time_suggestion.response }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ai_assistant_task_input
+        data:
+          value: ""
