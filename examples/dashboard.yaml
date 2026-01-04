@@ -1,0 +1,179 @@
+# Example Lovelace dashboard for HA AI Assistant
+# This can be added as a new dashboard or integrated into your existing one
+
+title: AI Assistant
+views:
+  - title: Overview
+    path: ai-assistant
+    badges: []
+    cards:
+      # Chat with AI Assistant
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: |
+              ## 🤖 Chat with AI Assistant
+              Ask questions about your schedule, get task suggestions, or request analysis.
+          - type: entities
+            entities:
+              - entity: input_text.ai_assistant_chat_input
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Send Message
+                icon: mdi:send
+                tap_action:
+                  action: call-service
+                  service: script.ask_ai_assistant
+              - type: button
+                name: Analyze Schedule
+                icon: mdi:calendar-clock
+                tap_action:
+                  action: call-service
+                  service: ha_ai_assistant.analyze_schedule
+              - type: button
+                name: Check Reminders
+                icon: mdi:bell-ring
+                tap_action:
+                  action: call-service
+                  service: ha_ai_assistant.check_and_remind
+
+      # Task Scheduling Helper
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: |
+              ## 📅 Schedule New Task
+              Enter a task and get AI suggestions for the best time to complete it.
+          - type: entities
+            entities:
+              - entity: input_text.ai_assistant_task_input
+          - type: button
+            name: Get Time Suggestion
+            icon: mdi:clock-check
+            tap_action:
+              action: call-service
+              service: script.schedule_new_task
+
+      # Todo Lists
+      - type: todo-list
+        title: My Tasks
+        entity: todo.my_tasks
+
+      # Calendar
+      - type: calendar
+        title: My Calendar
+        entities:
+          - calendar.personal
+          - calendar.work
+
+      # Statistics (if you create sensors)
+      - type: markdown
+        content: |
+          ## 📊 Organization Stats
+          Track your productivity and organization over time.
+      - type: glance
+        entities:
+          - entity: sensor.pending_tasks
+            name: Pending Tasks
+          - entity: sensor.overdue_tasks
+            name: Overdue Tasks
+          - entity: sensor.completed_today
+            name: Completed Today
+          - entity: sensor.upcoming_events
+            name: Upcoming Events
+
+      # Recent AI Insights
+      - type: markdown
+        content: |
+          ## 💡 Recent AI Insights
+          Latest analysis and suggestions from your AI assistant.
+          
+          *Insights will appear here after running check_and_remind or analyze_schedule services.*
+
+      # Quick Actions
+      - type: entities
+        title: Quick Actions
+        show_header_toggle: false
+        entities:
+          - type: button
+            name: Morning Briefing
+            icon: mdi:weather-sunset-up
+            action_name: Run
+            tap_action:
+              action: call-service
+              service: automation.trigger
+              service_data:
+                entity_id: automation.ai_assistant_morning_briefing
+          - type: button
+            name: Evening Review
+            icon: mdi:weather-sunset-down
+            action_name: Run
+            tap_action:
+              action: call-service
+              service: automation.trigger
+              service_data:
+                entity_id: automation.ai_assistant_evening_review
+
+# Optional: Create a second view for configuration
+  - title: Configuration
+    path: ai-config
+    badges: []
+    cards:
+      - type: markdown
+        content: |
+          ## ⚙️ Configuration
+          
+          To configure the AI Assistant integration:
+          1. Go to Settings → Devices & Services
+          2. Find "HA AI Assistant"
+          3. Click "Configure" to adjust settings
+          
+          ### Available Settings:
+          - Check Interval (30-240 minutes)
+          - Active Hours (when the assistant is active)
+          - Enable/Disable Reminders
+          - Enable/Disable Schedule Analysis
+
+      - type: markdown
+        content: |
+          ## 🔑 Getting a GitHub Models API Token
+          
+          1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+          2. Click "Generate new token" → "Generate new token (classic)"
+          3. Give it a descriptive name like "Home Assistant AI"
+          4. Select scopes: `repo` (if accessing private repos) or leave empty for public access
+          5. Click "Generate token"
+          6. Copy the token immediately (you won't see it again!)
+          7. Use this token in the integration configuration
+
+      - type: markdown
+        content: |
+          ## 📚 Available Services
+          
+          ### `ha_ai_assistant.check_and_remind`
+          Manually trigger a check for reminders and get AI analysis.
+          
+          ### `ha_ai_assistant.chat`
+          Send a message to the AI assistant.
+          - **message**: Your question or request
+          
+          ### `ha_ai_assistant.analyze_schedule`
+          Get AI analysis of your upcoming schedule.
+          
+          ### `ha_ai_assistant.suggest_task_time`
+          Ask AI when to schedule a specific task.
+          - **task**: Description of the task
+
+      - type: markdown
+        content: |
+          ## 🎯 Anti-Spontaneity Tips
+          
+          The AI Assistant is designed to help you:
+          - ✅ Plan ahead instead of making impulsive decisions
+          - ✅ Complete existing tasks before starting new ones
+          - ✅ Identify conflicts and gaps in your schedule
+          - ✅ Break down large tasks into manageable steps
+          - ✅ Stay focused and organized
+          
+          Let the AI help you build better habits!

@@ -1,0 +1,156 @@
+# Example automations for HA AI Assistant
+# Copy and adapt these to your own automations.yaml
+
+# Hourly reminder check during active hours
+- id: ha_ai_assistant_hourly_check
+  alias: "AI Assistant: Hourly Check"
+  description: "Check for reminders and suggestions every hour during active hours"
+  trigger:
+    - platform: time_pattern
+      hours: "/1"
+  condition:
+    - condition: time
+      after: "07:00:00"
+      before: "23:00:00"
+  action:
+    - service: ha_ai_assistant.check_and_remind
+  mode: single
+
+# Morning briefing
+- id: ha_ai_assistant_morning_briefing
+  alias: "AI Assistant: Morning Briefing"
+  description: "Get AI analysis of the day ahead every morning"
+  trigger:
+    - platform: time
+      at: "07:00:00"
+  action:
+    - service: ha_ai_assistant.analyze_schedule
+      response_variable: schedule_analysis
+    - service: notify.notify
+      data:
+        title: "Good Morning! Here's your day ahead:"
+        message: "{{ schedule_analysis.response }}"
+  mode: single
+
+# Evening review
+- id: ha_ai_assistant_evening_review
+  alias: "AI Assistant: Evening Review"
+  description: "Review uncompleted tasks and prepare for tomorrow"
+  trigger:
+    - platform: time
+      at: "21:00:00"
+  action:
+    - service: ha_ai_assistant.check_and_remind
+    - wait_for_trigger:
+        - platform: event
+          event_type: ha_ai_assistant_reminder
+      timeout: "00:00:30"
+    - service: notify.notify
+      data:
+        title: "Evening Review"
+        message: "{{ wait.trigger.event.data.analysis }}"
+  mode: single
+
+# Smart interval checking (more frequent when there are pending tasks)
+- id: ha_ai_assistant_smart_check
+  alias: "AI Assistant: Smart Check"
+  description: "Check more frequently when there are pending tasks"
+  trigger:
+    - platform: time_pattern
+      minutes: "/30"
+  condition:
+    - condition: state
+      entity_id: todo.my_tasks
+      state: "0"
+      attribute: all_tasks
+      value_template: "{{ states.todo.my_tasks.attributes.all_tasks | length > 0 }}"
+  action:
+    - service: ha_ai_assistant.check_and_remind
+  mode: single
+
+# Chat response notification
+- id: ha_ai_assistant_chat_notification
+  alias: "AI Assistant: Chat Response Notification"
+  description: "Send notification when chat response is received"
+  trigger:
+    - platform: event
+      event_type: ha_ai_assistant_chat_response
+  action:
+    - service: notify.notify
+      data:
+        title: "AI Assistant Response"
+        message: "{{ trigger.event.data.response }}"
+  mode: queued
+  max: 5
+
+# Remind about overdue tasks
+- id: ha_ai_assistant_overdue_check
+  alias: "AI Assistant: Overdue Tasks Check"
+  description: "Check for overdue tasks twice daily"
+  trigger:
+    - platform: time
+      at:
+        - "09:00:00"
+        - "15:00:00"
+  action:
+    - service: ha_ai_assistant.chat
+      data:
+        message: "What tasks are overdue or need urgent attention?"
+      response_variable: overdue_response
+    - condition: template
+      value_template: "{{ 'overdue' in overdue_response.response.lower() or 'urgent' in overdue_response.response.lower() }}"
+    - service: notify.notify
+      data:
+        title: "⚠️ Attention Needed"
+        message: "{{ overdue_response.response }}"
+  mode: single
+
+# Weekend planning
+- id: ha_ai_assistant_weekend_planning
+  alias: "AI Assistant: Weekend Planning"
+  description: "Get AI suggestions for weekend tasks on Friday evening"
+  trigger:
+    - platform: time
+      at: "18:00:00"
+  condition:
+    - condition: time
+      weekday:
+        - fri
+  action:
+    - service: ha_ai_assistant.chat
+      data:
+        message: "Based on my pending tasks, what should I prioritize for the weekend?"
+      response_variable: weekend_plan
+    - service: notify.notify
+      data:
+        title: "Weekend Planning"
+        message: "{{ weekend_plan.response }}"
+  mode: single
+
+# Task time suggestion when adding new task
+- id: ha_ai_assistant_new_task_scheduling
+  alias: "AI Assistant: New Task Scheduling"
+  description: "Suggest time for newly added tasks"
+  trigger:
+    - platform: state
+      entity_id: todo.my_tasks
+      attribute: all_tasks
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.attributes.all_tasks | length > trigger.from_state.attributes.all_tasks | length }}"
+  action:
+    - variables:
+        new_task: >
+          {% set old_tasks = trigger.from_state.attributes.all_tasks | map(attribute='summary') | list %}
+          {% set new_tasks = trigger.to_state.attributes.all_tasks | map(attribute='summary') | list %}
+          {{ (new_tasks | reject('in', old_tasks) | list)[0] }}
+    - service: ha_ai_assistant.suggest_task_time
+      data:
+        task: "{{ new_task }}"
+      response_variable: time_suggestion
+    - service: notify.notify
+      data:
+        title: "Task Scheduling Suggestion"
+        message: "For task '{{ new_task }}': {{ time_suggestion.response }}"
+  mode: queued
+  max: 3

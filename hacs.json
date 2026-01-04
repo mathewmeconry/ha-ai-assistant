@@ -1,0 +1,8 @@
+{
+  "name": "HA AI Assistant",
+  "content_in_root": false,
+  "filename": "ha_ai_assistant",
+  "homeassistant": "2024.1.0",
+  "render_readme": true,
+  "zip_release": false
+}
