@@ -191,7 +191,7 @@ class HAAssistantOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -201,7 +201,7 @@ class HAAssistantOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         # Get current configuration
-        current_config = {**self.config_entry.data, **self.config_entry.options}
+        current_config = {**self._config_entry.data, **self._config_entry.options}
 
         data_schema = vol.Schema({
             vol.Optional(
